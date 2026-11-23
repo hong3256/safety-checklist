@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="안전보건 점검">
-<title>2026년 12월 산업안전보건 자체점검표</title>
+<title>만천초등학교 안전보건 자체점검표</title>
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="icon" href="./favicon.ico" sizes="any">
@@ -37,6 +37,13 @@ button{font-family:inherit}
 .bwrap{display:flex; flex-direction:column; min-width:0}
 .bt{font-weight:800; font-size:15px; color:var(--navy); letter-spacing:-.3px; white-space:nowrap}
 .bsub{font-size:11px; color:var(--muted); white-space:nowrap}
+.ym{display:inline-flex; align-items:center; gap:3px; margin-top:2px}
+.ym select{
+  font:inherit; font-size:12px; font-weight:800; color:var(--navy);
+  background:#eaf1f9; border:1px solid #d3e1f1; border-radius:7px;
+  padding:2px 2px; min-height:26px; cursor:pointer;
+}
+.ym select:focus{outline:2px solid #8fb8e8; outline-offset:0}
 .tools{margin-left:auto; display:flex; align-items:center; gap:6px}
 .badge{
   display:inline-flex; align-items:center; gap:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
@@ -141,7 +148,7 @@ td.special{background:#fff8e1; color:#4a4a4a; font-size:12px; line-height:1.6; w
 @media print{
   @page{size:A4 landscape; margin:9mm 10mm}
   html,body{background:#fff !important}
-  .stick,.foot,.no-print,.overlay{display:none !important}
+  .stick,.foot,.no-print,.overlay,.ym{display:none !important}
   .wrap{max-width:none; margin:0; padding:0}
   .panel{display:none; border:none; border-radius:0; box-shadow:none; margin:0}
   .panel.active{display:block}
@@ -195,7 +202,10 @@ body.pdf-mode input::placeholder{color:transparent}
 .g-tag{display:none}
 @media (max-width:640px){
   .bsub{display:none}
-  .bt{font-size:13.5px}
+  .topbar{flex-wrap:wrap; row-gap:5px}
+  .brand{flex:1 1 100%}
+  .tools{margin-left:auto}
+  .bt{font-size:13.5px; white-space:normal; line-height:1.25}
   .logo{font-size:18px}
   .badge{font-size:11px; padding:4px 8px}
   .ibtn{min-width:32px; min-height:32px; padding:5px 6px; font-size:14px}
@@ -233,8 +243,11 @@ body.pdf-mode input::placeholder{color:transparent}
     <div class="brand">
       <span class="logo" aria-hidden="true">🛡️</span>
       <span class="bwrap">
-        <span class="bt">안전보건 자체점검</span>
-        <span class="bsub">2026년 12월 · 산업안전보건관리</span>
+        <span class="bt">만천초등학교 안전보건 자체점검표</span>
+        <span class="ym no-print">
+          <select id="selYear" aria-label="연도"></select>
+          <select id="selMonth" aria-label="월"></select>
+        </span>
       </span>
     </div>
     <div class="tools">
@@ -268,8 +281,58 @@ TABS.forEach(function(t){ TAB_NAME_KEY[t.name] = t.key; });
 var LS_STATE = 'safety2026-12:state:v1';
 var LS_URL   = 'safety2026-12:sync';
 var LS_CID   = 'safety2026-12:cid';
+var LS_YM    = 'safety:ym:v1';
 var DEFAULT_SYNC_URL = 'https://script.google.com/macros/s/AKfycbymLXi_FX0OZsOBvWr0o7W820H9r6-iid53-3f6py8BFhwRNAzIZO2OlanbmwBv_dKMuQ/exec';
 var POLL_MS = 5000;
+
+/* ================= 점검 연월 ================= */
+var YM_YEARS = [2025, 2026, 2027, 2028, 2029, 2030];
+var YM = (function(){
+  var d = { y:2026, m:12 };
+  try{
+    var o = JSON.parse(localStorage.getItem(LS_YM) || 'null');
+    if(o && +o.y >= 2000 && +o.y <= 2100 && +o.m >= 1 && +o.m <= 12){ d.y = +o.y; d.m = +o.m; }
+  }catch(e){}
+  return d;
+})();
+function ymText(){ return YM.y + '년 ' + YM.m + '월'; }
+function docTitle(){ return ymText() + ' 안전보건관리 자체점검표'; }
+function saveYm(){ try{ localStorage.setItem(LS_YM, JSON.stringify({ y:YM.y, m:YM.m })); }catch(e){} }
+function fillYmSelects(){
+  var sy = $('#selYear'), sm = $('#selMonth');
+  if(!sy || !sm) return;
+  var years = YM_YEARS.slice();
+  if(years.indexOf(YM.y) < 0){ years.push(YM.y); years.sort(function(a,b){ return a-b; }); }
+  sy.textContent = '';
+  years.forEach(function(y){
+    var o = document.createElement('option');
+    o.value = String(y); o.textContent = y + '년';
+    sy.appendChild(o);
+  });
+  sm.textContent = '';
+  for(var m = 1; m <= 12; m++){
+    var o2 = document.createElement('option');
+    o2.value = String(m); o2.textContent = m + '월';
+    sm.appendChild(o2);
+  }
+  sy.value = String(YM.y);
+  sm.value = String(YM.m);
+}
+function applyYm(){
+  var t = docTitle();
+  TABS.forEach(function(x){
+    var r = refs[x.key];
+    if(r && r.ptEl) r.ptEl.textContent = t;
+  });
+}
+function setYm(y, m){
+  YM.y = y; YM.m = m;
+  saveYm();
+  var sy = $('#selYear'), sm = $('#selMonth');
+  if(sy) sy.value = String(YM.y);
+  if(sm) sm.value = String(YM.m);
+  applyYm();
+}
 
 var CLIENT_ID = (function(){
   try{
@@ -387,7 +450,7 @@ function build(){
 
     var head = document.createElement('div');
     head.className = 'ph';
-    var pt = document.createElement('div'); pt.className = 'pt'; pt.textContent = t.title;
+    var pt = document.createElement('div'); pt.className = 'pt'; pt.textContent = docTitle();
     head.appendChild(pt);
     if(t.sub){
       var ps = document.createElement('div'); ps.className = 'ps'; ps.textContent = t.sub; head.appendChild(ps);
@@ -578,7 +641,7 @@ function build(){
 
     panelsEl.appendChild(p);
     refs[t.key] = {
-      panel:p, rows:rowRefs, date:dEl, name:nEl,
+      panel:p, rows:rowRefs, date:dEl, name:nEl, ptEl:pt,
       prog:ptxt, bar:barI, title:t.title, short:t.short || t.name
     };
   });
@@ -1185,7 +1248,7 @@ async function doPdf(all){
     }
 
     var shortName = all ? '전체' : (refs[S.tab].short || TAB_BY_KEY[S.tab].name);
-    pdf.save('2026년12월_산업안전보건_체크리스트_' + shortName + '.pdf');
+    pdf.save(YM.y + '년' + YM.m + '월_만천초등학교_안전보건_자체점검표_' + shortName + '.pdf');
   }catch(e){
     restorePlaceholders(phSaved);
     dateEls.forEach(function(el){ if(el && el.dataset.wasDate){ el.type = 'date'; delete el.dataset.wasDate; } });
@@ -1206,6 +1269,10 @@ async function doPdf(all){
 /* ================= 시작 ================= */
 function start(){
   build();
+  fillYmSelects();
+  applyYm();
+  $('#selYear').addEventListener('change', function(){ setYm(+this.value, YM.m); });
+  $('#selMonth').addEventListener('change', function(){ setYm(YM.y, +this.value); });
   selectTab(S.tab, false);
   sync.init();
   $('#badge').addEventListener('click', openSettings);
