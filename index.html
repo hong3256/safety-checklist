@@ -147,7 +147,7 @@ td.special{background:#fff8e1; color:#4a4a4a; font-size:12px; line-height:1.6; w
 .opt:active{background:#eef4fb}
 /* ---------- 인쇄 ---------- */
 @media print{
-  @page{size:A4 landscape; margin:9mm 10mm}
+  @page{size:A4 portrait; margin:9mm 10mm}
   html,body{background:#fff !important}
   .stick,.foot,.no-print,.overlay,.ym{display:none !important}
   .wrap{max-width:none; margin:0; padding:0}
@@ -168,7 +168,8 @@ td.special{background:#fff8e1; color:#4a4a4a; font-size:12px; line-height:1.6; w
   .prog{font-size:8pt}
   .bar{display:none}
   .table-wrap{overflow:visible}
-  table{min-width:0; font-size:8.5pt}
+  table{min-width:0; width:100%; font-size:8.5pt; table-layout:fixed}
+  .col-g{width:16mm} .col-num{width:11mm} .col-y{width:11mm} .col-n{width:13mm} .col-note{width:36mm}
   thead{display:table-header-group}
   thead th{background:#1f4e79 !important; color:#fff !important; font-size:8pt; padding:3px 2px; -webkit-print-color-adjust:exact; print-color-adjust:exact}
   th,td{border:1px solid #7a7a7a !important; padding:2px 3px}
@@ -189,17 +190,39 @@ td.special{background:#fff8e1; color:#4a4a4a; font-size:12px; line-height:1.6; w
   .notes{padding:4px 0 0; border:none; background:#fff}
   .note-line{font-size:7pt}
 }
-/* ---------- PDF 캡처 모드 ---------- */
+/* ---------- PDF 캡처 모드 (A4 세로 780px ≙ 192mm) ---------- */
 body.pdf-mode{background:#fff; overflow-x:auto}
 body.pdf-mode .stick,body.pdf-mode .foot{display:none !important}
 body.pdf-mode .allnote{display:none !important}
 body.pdf-mode .wrap{max-width:none; margin:0; padding:0}
-body.pdf-mode .panels{width:1240px}
-body.pdf-mode .panel{display:none; width:1240px; margin:0; border:none; border-radius:0; box-shadow:none}
+body.pdf-mode .panels{width:780px}
+body.pdf-mode .panel{display:none; width:780px; margin:0; border:none; border-radius:0; box-shadow:none}
 body.pdf-mode .panel.pdf-target{display:block}
-body.pdf-mode .pt{font-size:19px}
-body.pdf-mode td.col-item{font-size:14px}
-body.pdf-mode .note-input{border:none}
+body.pdf-mode .ph{padding:10px 2px 6px}
+body.pdf-mode .pt{font-size:17px}
+body.pdf-mode .ps{font-size:13px; margin-top:2px}
+body.pdf-mode .pd{font-size:10.5px; margin-top:5px; line-height:1.45}
+body.pdf-mode .period{font-size:10.5px; padding:2px 9px; margin-bottom:4px}
+body.pdf-mode .meta-row{padding:7px 3px; gap:5px 14px}
+body.pdf-mode .mf label{font-size:11.5px}
+body.pdf-mode .mf input{font-size:11.5px; min-height:26px; padding:3px 6px}
+body.pdf-mode .mf input.inp-date{width:126px}
+body.pdf-mode .mf input.inp-name{width:102px}
+body.pdf-mode .prog{font-size:11px}
+body.pdf-mode .bar{display:none}
+body.pdf-mode table{table-layout:fixed; min-width:0}
+body.pdf-mode th,body.pdf-mode td{padding:4px}
+body.pdf-mode thead th{font-size:11.5px; padding:6px 3px}
+body.pdf-mode .col-g{width:60px} body.pdf-mode .col-num{width:40px} body.pdf-mode .col-y{width:42px} body.pdf-mode .col-n{width:50px} body.pdf-mode .col-note{width:146px}
+body.pdf-mode td.col-g{font-size:11px; padding:3px}
+body.pdf-mode td.col-num{font-size:12px}
+body.pdf-mode td.col-item{font-size:13px; line-height:1.45}
+body.pdf-mode td.col-y,body.pdf-mode td.col-n{padding:2px}
+body.pdf-mode .mark{min-height:26px; font-size:16px; border-radius:0}
+body.pdf-mode .note-input{border:none; font-size:11.5px; padding:4px 5px; min-height:26px}
+body.pdf-mode td.special{font-size:10.5px; padding:5px 7px; line-height:1.5}
+body.pdf-mode .notes{padding:6px 2px 10px}
+body.pdf-mode .note-line{font-size:9.5px; line-height:1.5}
 body.pdf-mode input::placeholder{color:transparent}
 .g-tag{display:none}
 @media (max-width:640px){
@@ -1075,7 +1098,7 @@ function openPrintMenu(){
   var t = TAB_BY_KEY[S.tab];
   var html =
     '<h2>🖨️ 인쇄</h2>' +
-    '<p class="muted">A4 가로 방향으로 인쇄됩니다. 표 머리글은 페이지마다 반복되고, 체크 표시 색은 그대로 인쇄됩니다.</p>' +
+    '<p class="muted">A4 세로 방향으로 인쇄됩니다. 표 머리글은 페이지마다 반복되고, 체크 표시 색은 그대로 인쇄됩니다.</p>' +
     '<div class="opts">' +
       '<button class="opt" type="button" data-act="one"><b>현재 탭 인쇄</b><span>' + esc(t.name) + '</span></button>' +
       '<button class="opt" type="button" data-act="all"><b>전체 6개 탭 인쇄</b><span>모든 직종 점검표를 탭마다 새 페이지로</span></button>' +
@@ -1185,7 +1208,7 @@ function stackBands(top, bottom){
 }
 
 async function renderPanelToPdf(pdf, panel, state){
-  var PW = 297, PH = 210, M = 8;
+  var PW = 210, PH = 297, M = 9;
   var iw = PW - M * 2;
 
   var canvas = await window.html2canvas(panel, {
@@ -1193,7 +1216,7 @@ async function renderPanelToPdf(pdf, panel, state){
     backgroundColor: '#ffffff',
     logging: false,
     useCORS: false,
-    windowWidth: 1240
+    windowWidth: 780
   });
 
   var pRect = panel.getBoundingClientRect();
@@ -1220,6 +1243,7 @@ async function renderPanelToPdf(pdf, panel, state){
   });
 
   var total = canvas.height;
+  var contentEnd = bounds.length ? Math.min(bounds[bounds.length - 1].bottom, total) : total;
   var y = 0;
   var pageNo = 0;
   while(y < total - 1){
@@ -1232,12 +1256,16 @@ async function renderPanelToPdf(pdf, panel, state){
       else if(bounds[i].top >= limit) break;
     }
     if(cut <= y + 1) cut = limit;
+    // 마지막 행 뒤의 안내문(꼬리)까지 이 페이지에 들어가면 함께 담아 빈 페이지를 만들지 않는다
+    if(cut >= contentEnd - 1 && total <= limit) cut = total;
     cut = Math.min(cut, total);
 
     var slice = cropBand(canvas, y, cut);
-    var pageCanvas = (cont && headCanvas) ? stackBands(headCanvas, slice) : slice;
+    // 꼬리(안내문)만 남은 페이지에는 표 머리글을 다시 그리지 않는다
+    var withHead = cont && headCanvas && y < contentEnd - 1;
+    var pageCanvas = withHead ? stackBands(headCanvas, slice) : slice;
 
-    if(state.started) pdf.addPage('a4', 'landscape');
+    if(state.started) pdf.addPage('a4', 'portrait');
     else state.started = true;
     pdf.addImage(pageCanvas.toDataURL('image/jpeg', 0.92), 'JPEG', M, M, iw, pageCanvas.height / pxPerMm, undefined, 'FAST');
 
@@ -1263,7 +1291,7 @@ async function doPdf(all){
     await sleep(200);
 
     var jsPDF = window.jspdf.jsPDF;
-    var pdf = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4', compress:true });
+    var pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4', compress:true });
     var state = { started:false };
 
     for(var i=0;i<targets.length;i++){
