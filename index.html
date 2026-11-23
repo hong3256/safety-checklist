@@ -1029,12 +1029,29 @@ function openPdfMenu(){
   });
 }
 
+function hidePlaceholders(roots){
+  var saved = [];
+  roots.forEach(function(root){
+    Array.prototype.forEach.call(root.querySelectorAll('input[placeholder]'), function(el){
+      if(!el.value){ saved.push([el, el.getAttribute('placeholder')]); el.removeAttribute('placeholder'); }
+    });
+  });
+  return saved;
+}
+function restorePlaceholders(saved){
+  (saved || []).forEach(function(x){ x[0].setAttribute('placeholder', x[1]); });
+}
+
 function doPrint(all){
   closeOverlay();
+  var saved = hidePlaceholders(all ? TABS.map(function(t){ return refs[t.key].panel; }) : [refs[S.tab].panel]);
   document.body.classList.toggle('print-all', !!all);
   setTimeout(function(){
     try{ window.print(); }catch(e){}
-    setTimeout(function(){ document.body.classList.remove('print-all'); }, 500);
+    setTimeout(function(){
+      document.body.classList.remove('print-all');
+      restorePlaceholders(saved);
+    }, 500);
   }, 80);
 }
 
@@ -1148,11 +1165,13 @@ async function doPdf(all){
   var btn = $('#btnPdf');
   if(btn) btn.disabled = true;
   var dateEls = [];
+  var phSaved = [];
   try{
     await ensureLibs();
     var targets = all ? TABS.map(function(t){ return refs[t.key].panel; }) : [refs[S.tab].panel];
     document.body.classList.add('pdf-mode');
     targets.forEach(function(p){ p.classList.add('pdf-target'); });
+    phSaved = hidePlaceholders(targets);
     dateEls = targets.map(function(p){ return p.querySelector('.inp-date'); });
     dateEls.forEach(function(el){ if(el && el.type === 'date'){ el.type = 'text'; el.dataset.wasDate = '1'; } });
     await sleep(200);
@@ -1168,6 +1187,7 @@ async function doPdf(all){
     var shortName = all ? '전체' : (refs[S.tab].short || TAB_BY_KEY[S.tab].name);
     pdf.save('2026년12월_산업안전보건_체크리스트_' + shortName + '.pdf');
   }catch(e){
+    restorePlaceholders(phSaved);
     dateEls.forEach(function(el){ if(el && el.dataset.wasDate){ el.type = 'date'; delete el.dataset.wasDate; } });
     document.body.classList.remove('pdf-mode');
     TABS.forEach(function(t){ refs[t.key].panel.classList.remove('pdf-target'); });
@@ -1176,6 +1196,7 @@ async function doPdf(all){
     doPrint(all);
     return;
   }
+  restorePlaceholders(phSaved);
   dateEls.forEach(function(el){ if(el && el.dataset.wasDate){ el.type = 'date'; delete el.dataset.wasDate; } });
   document.body.classList.remove('pdf-mode');
   TABS.forEach(function(t){ refs[t.key].panel.classList.remove('pdf-target'); });
